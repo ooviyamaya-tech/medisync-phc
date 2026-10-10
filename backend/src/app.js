@@ -5,7 +5,8 @@ import routes from './routes/index.js';
 import { errorHandler, notFound } from './middleware/errors.js';
 
 const app = express();
-app.use(cors());
+const frontendUrl = process.env.FRONTEND_URL?.replace(/\/$/, '');
+app.use(cors(frontendUrl ? { origin: frontendUrl } : undefined));
 app.use(express.json({ limit: '1mb' }));
 app.get('/health', (req, res) => res.json({ data: { status: 'ok', service: 'MediSync PHC API' } }));
 app.use('/', routes);

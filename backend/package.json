@@ -6,7 +6,7 @@
   "description": "MediSync PHC medicine stock monitoring and redistribution API",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js",
+    "start": "prisma db push && node src/server.js",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
@@ -21,10 +21,10 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "node-cron": "^4.2.1",
+    "prisma": "^6.19.3",
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10",
-    "prisma": "^6.19.0"
+    "nodemon": "^3.1.10"
   }
 }

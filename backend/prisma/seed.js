@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const prisma = new PrismaClient();
 const district = 'Khordha';
@@ -40,7 +42,7 @@ function randomGenerator(seed) {
   };
 }
 
-async function main() {
+async function seedDatabase() {
   await prisma.auditLog.deleteMany();
   await prisma.transferRequest.deleteMany();
   await prisma.alert.deleteMany();
@@ -113,7 +115,29 @@ async function main() {
   console.log('Demo logins: pharmacist@medisync.demo, officer@medisync.demo, admin@medisync.demo / MediSyncDemo2026!');
 }
 
-main().catch(error => {
-  console.error(error);
-  process.exitCode = 1;
-}).finally(async () => prisma.$disconnect());
+export async function seedIfEmpty() {
+  const recordCounts = await Promise.all([
+    prisma.user.count(),
+    prisma.pHC.count(),
+    prisma.medicine.count(),
+    prisma.stock.count(),
+    prisma.consumptionLog.count(),
+    prisma.alert.count(),
+    prisma.transferRequest.count(),
+    prisma.districtWarehouse.count(),
+    prisma.warehouseStock.count(),
+    prisma.auditLog.count(),
+    prisma.syncRecord.count(),
+  ]);
+  if (recordCounts.some(count => count > 0)) return false;
+  await seedDatabase();
+  return true;
+}
+
+const isDirectExecution = process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+if (isDirectExecution) {
+  seedDatabase().catch(error => {
+    console.error(error);
+    process.exitCode = 1;
+  }).finally(async () => prisma.$disconnect());
+}
