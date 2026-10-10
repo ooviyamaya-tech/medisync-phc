@@ -1,0 +1,12 @@
+{
+  "name": "MediSync PHC",
+  "short_name": "MediSync",
+  "description": "Medicine stock monitoring and redistribution",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f9f8",
+  "theme_color": "#087f79",
+  "icons": [
+    { "src": "/medisync-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

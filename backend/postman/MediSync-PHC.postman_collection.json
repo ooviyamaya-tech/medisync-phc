@@ -1,0 +1,72 @@
+{
+  "info": {
+    "name": "MediSync PHC API",
+    "description": "Local API collection. Login saves the JWT token automatically.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "token", "value": "" },
+    { "key": "email", "value": "pharmacist@medisync.demo" },
+    { "key": "password", "value": "MediSyncDemo2026!" },
+    { "key": "phcId", "value": "" },
+    { "key": "medicineId", "value": "" },
+    { "key": "alertId", "value": "" },
+    { "key": "transferId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health and Auth",
+      "item": [
+        { "name": "Health", "request": { "method": "GET", "url": "{{baseUrl}}/health" } },
+        {
+          "name": "Login",
+          "event": [{ "listen": "test", "script": { "exec": ["const body = pm.response.json();", "if (body.data?.token) pm.collectionVariables.set('token', body.data.token);", "if (body.data?.user?.phc_id) pm.collectionVariables.set('phcId', body.data.user.phc_id);"] } }],
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/auth/login" }
+        },
+        { "name": "Current user", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/auth/me" } }
+      ]
+    },
+    {
+      "name": "Reference and Stock",
+      "item": [
+        { "name": "List PHCs", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/phcs?page=1&limit=20" } },
+        { "name": "List medicines", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/medicines?page=1&limit=30" } },
+        { "name": "Stock by PHC", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/stock?phc_id={{phcId}}&page=1&limit=20" } },
+        { "name": "Create stock batch", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"phc_id\": \"{{phcId}}\",\n  \"medicine_id\": \"{{medicineId}}\",\n  \"batch_no\": \"DEMO-NEW-001\",\n  \"quantity\": 120,\n  \"expiry_date\": \"2027-12-31\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/stock" } },
+        { "name": "Offline bulk sync", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"entries\": [\n    {\n      \"client_id\": \"offline-client-change-me-001\",\n      \"client_timestamp\": \"2026-10-10T09:00:00.000Z\",\n      \"phc_id\": \"{{phcId}}\",\n      \"medicine_id\": \"{{medicineId}}\",\n      \"batch_no\": \"OFFLINE-001\",\n      \"quantity\": 90,\n      \"expiry_date\": \"2027-08-31\"\n    }\n  ]\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/stock/bulk-sync" } }
+      ]
+    },
+    {
+      "name": "Forecast, Alerts and Planning",
+      "item": [
+        { "name": "Forecast for PHC", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/forecast/{{phcId}}" } },
+        { "name": "Forecast for medicine", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/forecast/{{phcId}}/{{medicineId}}" } },
+        { "name": "List alerts", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/alerts?status=OPEN&page=1&limit=20" } },
+        { "name": "Acknowledge alert", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"status\": \"ACKNOWLEDGED\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/alerts/{{alertId}}" } },
+        { "name": "Redistribution suggestions", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/redistribution/suggest?phc_id={{phcId}}&medicine_id={{medicineId}}&quantity=100" } },
+        { "name": "Smart indent", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/indent/suggest?phc_id={{phcId}}" } },
+        { "name": "Centre urgency (district admin)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/centres/urgency" } }
+      ]
+    },
+    {
+      "name": "Consumption and Transfers",
+      "item": [
+        { "name": "Log consumption", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"phc_id\": \"{{phcId}}\",\n  \"medicine_id\": \"{{medicineId}}\",\n  \"quantity_used\": 12\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/consumption" } },
+        { "name": "List consumption", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/consumption?phc_id={{phcId}}&medicine_id={{medicineId}}&page=1&limit=20" } },
+        { "name": "Create transfer", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"from_phc_id\": \"{{phcId}}\",\n  \"to_phc_id\": \"REPLACE_DESTINATION_PHC_ID\",\n  \"medicine_id\": \"{{medicineId}}\",\n  \"quantity\": 20,\n  \"type\": \"REDISTRIBUTION\",\n  \"reason\": \"Cover projected shortage\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/transfers" } },
+        { "name": "List transfers", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/transfers?page=1&limit=20" } },
+        { "name": "Approve transfer (medical officer)", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/transfers/{{transferId}}/approve" } },
+        { "name": "Reject transfer (medical officer)", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/transfers/{{transferId}}/reject" } }
+      ]
+    },
+    {
+      "name": "Dashboards",
+      "item": [
+        { "name": "Pharmacist dashboard", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/dashboard/pharmacist" } },
+        { "name": "Medical officer dashboard", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/dashboard/medical-officer" } },
+        { "name": "District admin dashboard", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/dashboard/district-admin" } }
+      ]
+    }
+  ]
+}
